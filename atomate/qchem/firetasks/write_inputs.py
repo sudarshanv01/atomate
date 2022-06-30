@@ -54,7 +54,13 @@ class WriteInputFromIOSet(FiretaskBase):
     """
 
     required_params = ["qchem_input_set"]
-    optional_params = ["molecule", "qchem_input_params", "input_file", "write_to_dir"]
+    optional_params = [
+        "molecule",
+        "qchem_input_params",
+        "input_file",
+        "write_to_dir",
+        "extra_scf_print",
+    ]
 
     def run_task(self, fw_spec):
         input_file = os.path.join(

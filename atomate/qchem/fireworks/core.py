@@ -35,6 +35,7 @@ class SinglePointFW(Firework):
         db_file=None,
         parents=None,
         max_errors=5,
+        extra_scf_print=False,
         **kwargs
     ):
         """
@@ -62,6 +63,9 @@ class SinglePointFW(Firework):
                 typical modifications, as seen in the test_double_FF_opt workflow test.
             db_file (str): Path to file specifying db credentials to place output parsing.
             parents ([Firework]): Parents of this particular Firework.
+            extra_scf_print (bool): Whether to store extra information generated from the SCF
+                cycle. If switched on, the Fock Matrix, coefficients of MO and the density matrix
+                will be stored.
             **kwargs: Other kwargs that are passed to Firework.__init__.
         """
 
@@ -75,6 +79,7 @@ class SinglePointFW(Firework):
                 qchem_input_set="SinglePointSet",
                 input_file=input_file,
                 qchem_input_params=qchem_input_params,
+                extra_scf_print=extra_scf_print,
             )
         )
         t.append(
