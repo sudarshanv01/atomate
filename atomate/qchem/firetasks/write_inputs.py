@@ -67,6 +67,9 @@ class WriteInputFromIOSet(FiretaskBase):
             self.get("write_to_dir", ""), self.get("input_file", "mol.qin")
         )
 
+        if self.get("extra_scf_print") is not None:
+            self["qchem_input_params"]["extra_scf_print"] = self.get("extra_scf_print")
+
         # if a full QChemDictSet object was provided
         if hasattr(self["qchem_input_set"], "write_file"):
             qcin = self["qchem_input_set"]
