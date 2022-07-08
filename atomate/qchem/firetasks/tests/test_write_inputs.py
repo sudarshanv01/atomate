@@ -28,6 +28,9 @@ class TestWriteInputQChem(AtomateTest):
         cls.co_opt_ref_in = QCInput.from_file(
             os.path.join(module_dir, "..", "..", "test_files", "co_qc.in")
         )
+        cls.co_scf_ref_in = QCInput.from_file(
+            os.path.join(module_dir, "..", "..", "test_files", "co_qc_scf.in")
+        )
         cls.opt_mol_ref_in = QCInput.from_file(
             os.path.join(module_dir, "..", "..", "test_files", "to_opt.qin")
         )
@@ -100,6 +103,16 @@ class TestWriteInputQChem(AtomateTest):
         for k, v in self.co_opt_ref_in.as_dict().items():
             self.assertEqual(v, test_dict[k])
 
+    def test_write_input_from_io_set_extra_scf_print(self):
+        ft = WriteInputFromIOSet(
+            molecule=self.co_mol, qchem_input_set="SinglePointSet", write_to_dir=module_dir,
+            extra_scf_print=True,
+        )
+        ft.run_task({})
+        test_dict = QCInput.from_file(os.path.join(module_dir, "mol.qin")).as_dict()
+        for k, v in self.co_scf_ref_in.as_dict().items():
+            self.assertEqual(v, test_dict[k])
+    
     def test_write_input(self):
         mol = self.co_mol
         rem = {

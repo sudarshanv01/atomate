@@ -67,9 +67,6 @@ class WriteInputFromIOSet(FiretaskBase):
             self.get("write_to_dir", ""), self.get("input_file", "mol.qin")
         )
 
-        if self.get("extra_scf_print") is not None:
-            self["qchem_input_params"]["extra_scf_print"] = self.get("extra_scf_print")
-
         # if a full QChemDictSet object was provided
         if hasattr(self["qchem_input_set"], "write_file"):
             qcin = self["qchem_input_set"]
@@ -101,9 +98,31 @@ class WriteInputFromIOSet(FiretaskBase):
                 mol = prev_calc_mol
 
             qcin_cls = load_class("pymatgen.io.qchem.sets", self["qchem_input_set"])
+            if self.get("extra_scf_print"):
+                if hasattr(self, "qchem_input_params"):
+                    # If it is requested to have scf_print, then add it to the qchem_input_params
+                    self["qchem_input_params"]["extra_scf_print"] = self.get(
+                        "extra_scf_print"
+                    )
+                else:
+                    # There is not qchem_input_params yet, so create one
+                    self["qchem_input_params"] = {
+                        "extra_scf_print": self.get("extra_scf_print")
+                    }
             qcin = qcin_cls(mol, **self.get("qchem_input_params", {}))
         # if a molecule is only included as an optional parameter
         elif self.get("molecule"):
+            if self.get("extra_scf_print"):
+                if hasattr(self, "qchem_input_params"):
+                    # If it is requested to have scf_print, then add it to the qchem_input_params
+                    self["qchem_input_params"]["extra_scf_print"] = self.get(
+                        "extra_scf_print"
+                    )
+                else:
+                    # There is not qchem_input_params yet, so create one
+                    self["qchem_input_params"] = {
+                        "extra_scf_print": self.get("extra_scf_print")
+                    }
             qcin_cls = load_class("pymatgen.io.qchem.sets", self["qchem_input_set"])
             qcin = qcin_cls(self.get("molecule"), **self.get("qchem_input_params", {}))
         # if no molecule is present raise an error

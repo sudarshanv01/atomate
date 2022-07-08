@@ -62,6 +62,7 @@ class TestCore(AtomateTest):
                 qchem_input_set="SinglePointSet",
                 input_file="mol.qin",
                 qchem_input_params={},
+                extra_scf_print=False,
             ).as_dict(),
         )
         self.assertEqual(
@@ -88,6 +89,20 @@ class TestCore(AtomateTest):
         self.assertEqual(firework.parents, [])
         self.assertEqual(firework.name, "single point")
 
+    def test_SinglePointFW_extra_scf_print(self):
+        firework = SinglePointFW(molecule=self.act_mol, 
+                            extra_scf_print=True)
+        self.assertEqual(
+            firework.tasks[0].as_dict(),
+            WriteInputFromIOSet(
+                molecule=self.act_mol,
+                qchem_input_set="SinglePointSet",
+                input_file="mol.qin",
+                qchem_input_params={},
+                extra_scf_print=True,
+            ).as_dict(),
+        )
+
     def test_SinglePointFW_not_defaults(self):
         firework = SinglePointFW(
             molecule=self.act_mol,
@@ -98,6 +113,7 @@ class TestCore(AtomateTest):
             qchem_input_params={"pcm_dielectric": 10.0},
             db_file=db_file,
             parents=None,
+            extra_scf_print=True,
         )
         self.assertEqual(
             firework.tasks[0].as_dict(),
@@ -106,6 +122,7 @@ class TestCore(AtomateTest):
                 qchem_input_set="SinglePointSet",
                 input_file="mol.qin",
                 qchem_input_params={"pcm_dielectric": 10.0},
+                extra_scf_print=True,
             ).as_dict(),
         )
         self.assertEqual(
