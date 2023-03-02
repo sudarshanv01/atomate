@@ -99,7 +99,7 @@ class WriteInputFromIOSet(FiretaskBase):
 
             qcin_cls = load_class("pymatgen.io.qchem.sets", self["qchem_input_set"])
             if self.get("extra_scf_print"):
-                if hasattr(self, "qchem_input_params"):
+                if self.get("qchem_input_params") is not None:
                     # If it is requested to have scf_print, then add it to the qchem_input_params
                     self["qchem_input_params"]["extra_scf_print"] = self.get(
                         "extra_scf_print"
