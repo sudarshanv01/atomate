@@ -113,7 +113,7 @@ class WriteInputFromIOSet(FiretaskBase):
         # if a molecule is only included as an optional parameter
         elif self.get("molecule"):
             if self.get("extra_scf_print"):
-                if hasattr(self, "qchem_input_params"):
+                if self.get("qchem_input_params") is not None:
                     # If it is requested to have scf_print, then add it to the qchem_input_params
                     self["qchem_input_params"]["extra_scf_print"] = self.get(
                         "extra_scf_print"
