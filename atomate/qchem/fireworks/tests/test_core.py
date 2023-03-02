@@ -4,11 +4,14 @@ from itertools import chain
 
 import numpy as np
 from pymatgen.io.qchem.outputs import QCOutput
+from pymatgen.core.structure import Molecule
+from pymatgen.core.sites import Site
 
 from atomate.qchem.firetasks.critic2 import ProcessCritic2, RunCritic2
 from atomate.qchem.firetasks.fragmenter import FragmentMolecule
 from atomate.qchem.firetasks.geo_transformations import PerturbGeometry
 from atomate.qchem.firetasks.parse_outputs import QChemToDb
+from atomate.qchem.firetasks.parse_outputs import ProtCalcToDb
 from atomate.qchem.firetasks.run_calc import RunQChemCustodian
 from atomate.qchem.firetasks.write_inputs import WriteInputFromIOSet
 from atomate.qchem.fireworks.core import (
@@ -19,6 +22,7 @@ from atomate.qchem.fireworks.core import (
     FrequencyFW,
     OptimizeFW,
     PESScanFW,
+    ProtonEnergyFW,
     SinglePointFW,
     TransitionStateFW,
 )
@@ -148,6 +152,83 @@ class TestCore(AtomateTest):
         )
         self.assertEqual(firework.parents, [])
         self.assertEqual(firework.name, "special single point")
+
+    def test_ProtonEnergyFW(self):
+
+        H_site_1_H2O = Site("H", [0.18338, 2.20176, 0.01351])
+        H_site_2_H2O = Site("H", [-1.09531, 1.61602, 0.70231])
+        O_site_H2O = Site("O", [-0.80595, 2.22952, -0.01914])
+        H2O_molecule = Molecule.from_sites([H_site_1_H2O, H_site_2_H2O, O_site_H2O])
+
+        H_site_1_H3O = Site("H", [0.11550, 2.34733, 0.00157])
+        H_site_2_H3O = Site("H", [-1.17463, 1.77063, 0.67652])
+        H_site_3_H3O = Site("H", [-1.29839, 2.78012, -0.51436])
+        O_site_H3O = Site("O", [-0.78481, 1.99137, -0.20661])
+        H3O_ion = Molecule.from_sites(
+            [H_site_1_H3O, H_site_2_H3O, H_site_3_H3O, O_site_H3O]
+        )
+
+        H2O_molecule.set_charge_and_spin(0, 1)
+        H3O_ion.set_charge_and_spin(1, 1)
+
+        firework = ProtonEnergyFW(qchem_input_params={"smd_solvent": "water"})
+        self.assertEqual(
+            firework.tasks[0].as_dict(),
+            WriteInputFromIOSet(
+                molecule=H2O_molecule,
+                qchem_input_set="OptSet",
+                input_file="water.qin",
+                qchem_input_params={"smd_solvent": "water"},
+            ).as_dict(),
+        )
+        self.assertEqual(
+            firework.tasks[1].as_dict(),
+            RunQChemCustodian(
+                qchem_cmd=">>qchem_cmd<<",
+                multimode=">>multimode<<",
+                input_file="water.qin",
+                output_file="water.qout",
+                max_cores=">>max_cores<<",
+                max_errors=5,
+                job_type="normal",
+                gzipped_output=False,
+            ).as_dict(),
+        )
+        self.assertEqual(
+            firework.tasks[2].as_dict(),
+            WriteInputFromIOSet(
+                molecule=H3O_ion,
+                qchem_input_set="OptSet",
+                input_file="hydronium.qin",
+                qchem_input_params={"smd_solvent": "water"},
+            ).as_dict(),
+        )
+        self.assertEqual(
+            firework.tasks[3].as_dict(),
+            RunQChemCustodian(
+                qchem_cmd=">>qchem_cmd<<",
+                multimode=">>multimode<<",
+                input_file="hydronium.qin",
+                output_file="hydronium.qout",
+                max_cores=">>max_cores<<",
+                max_errors=5,
+                job_type="normal",
+                gzipped_output=False,
+            ).as_dict(),
+        )
+        self.assertEqual(
+            firework.tasks[4].as_dict(),
+            ProtCalcToDb(
+                db_file=None,
+                input_file_H2O="water.qin",
+                output_file_H2O="water.qout",
+                input_file_H3O="hydronium.qin",
+                output_file_H3O="hydronium.qout",
+                additional_fields={"task_label": "proton electronic energy"},
+            ).as_dict(),
+        )
+        self.assertEqual(firework.parents, [])
+        self.assertEqual(firework.name, "proton electronic energy")
 
     def test_OptimizeFW_defaults(self):
         firework = OptimizeFW(molecule=self.act_mol)
